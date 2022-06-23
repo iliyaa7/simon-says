@@ -1,33 +1,52 @@
-import { View, Text, TouchableOpacity, StyleSheet, Button } from "react-native";
+import { View, Text, TouchableOpacity  } from "react-native";
 import React, { useEffect, useState } from "react";
 import {
   blueButtonSound,
-  failButtonSound,
   greenButtonSound,
   redButtonSound,
   yellowButtonSound,
 } from "../../utils/react-native-sound";
 import ColorButton from "../../Components/ColorButton/ColorButton";
-import { Dimensions } from "react-native";
+
 import { useAppSelector, useAppDispatch } from "../../redux/hooks/hooks";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { RootStackParamList } from "../../../App";
 import {
   resestArray,
   updateArray,
 } from "../../redux/features/sequanceArray/sequanceArraySlice";
 import colorEnum from "../../Enums/colorEnum";
+import { resetCurrentScore, updateCurrentScore } from "../../redux/features/CurrentScore/currentScoreSlice"
+import {
+  startGame,
+  stopGame,
+} from "../../redux/features/isGameActive/isGameAvticeSlice";
+import { openModal } from "../../redux/features/isModaleVIsable/isModalVisableSlice";
+import styles from "./GameScreenStyle";
 
-const { width, height } = Dimensions.get("screen");
 
-const HomeScreen: React.FC = () => {
+type GameScreenNavigationProp = StackNavigationProp<RootStackParamList, "Game">;
+
+type GameScreenProp = {
+  navigation: GameScreenNavigationProp;
+};
+
+const GameScreen: React.FC<GameScreenProp> = ({ navigation }) => {
   const [flashBlue, setFlashBlue] = useState<boolean>(false);
   const [flashRed, setFlashRed] = useState<boolean>(false);
   const [flashYellow, setFlashYellow] = useState<boolean>(false);
   const [flashGreen, setFlashGreen] = useState<boolean>(false);
   const [isRoundActive, setIsRoundActive] = useState<boolean>(false);
-  const [isGameActive, setIsGameActive] = useState<boolean>(false);
   const [isComputerTurn, setIsComputerTurn] = useState<boolean>(false);
   const [isUserTurn, setIsUserTurn] = useState<boolean>(false);
   const [sequanceCount, setSequanceCount] = useState<number>(0);
+  const [message, setMessage] = useState<string>("");
+  
+  const sequanceArray = useAppSelector((state) => state.sequanceArray.value);
+  const score = useAppSelector((state) => state.score.value);
+  const isGameActive = useAppSelector((state) => state.isGameActive.value);
+  const dispatch = useAppDispatch();
+
   const colors = [
     colorEnum.red,
     colorEnum.blue,
@@ -42,14 +61,10 @@ const HomeScreen: React.FC = () => {
     setFlashYellow,
   ];
 
-  // The `state` arg is correctly typed as `RootState` already
-  const currentStep = useAppSelector((state) => state.userCurrentStep.value);
-  const sequanceArray = useAppSelector((state) => state.sequanceArray.value);
-  const dispatch = useAppDispatch();
-
-  const startGame = (): void => {
+  const playGame = (): void => {
+    setMessage("");
     setIsComputerTurn(true);
-    setIsGameActive(true);
+    dispatch(startGame());
   };
 
   const playSequance = (): void => {
@@ -64,22 +79,20 @@ const HomeScreen: React.FC = () => {
   };
 
   const checkUserSequance = (currentStep: number): boolean => {
-    if(!isGameActive) return true
-    if (sequanceArray[sequanceCount] === currentStep) {
+    if (sequanceArray[sequanceCount] !== currentStep) {
+      dispatch(openModal())
+      navigation.navigate('LeaderBoard')
+      resetAllStates();
+      return false;
+    } else {
       if (sequanceArray.length === sequanceCount + 1) {
         setSequanceCount(0);
-        setTimeout(() => setIsUserTurn(false), 1500);
-        return true;
+        dispatch(updateCurrentScore());
+        setIsUserTurn(false);
+      } else {
+        setSequanceCount(sequanceCount + 1);
       }
-    } else {
-      setIsGameActive(false);
-      setSequanceCount(0);
-      resetAllStates();
-      setTimeout(() => setIsUserTurn(false), 1500);
-      setIsGameActive(false);
-      return false;
     }
-    setSequanceCount(sequanceCount + 1);
     return true;
   };
 
@@ -91,7 +104,8 @@ const HomeScreen: React.FC = () => {
   const resetAllStates = (): void => {
     dispatch(resestArray());
     setSequanceCount(0);
-    setIsGameActive(false);
+    dispatch(stopGame());
+    setIsUserTurn(false);
     setIsComputerTurn(false);
     setIsRoundActive(false);
   };
@@ -100,17 +114,19 @@ const HomeScreen: React.FC = () => {
     if (isComputerTurn) {
       addRandomStepToSeq();
       setIsRoundActive(true);
+      setMessage("Simon Says!");
     }
-    if (!isComputerTurn) {
+    if (!isComputerTurn && isGameActive) {
       setIsRoundActive(false);
       setIsUserTurn(true);
+      setMessage("Your Turn");
     }
   }, [isComputerTurn]);
 
   useEffect(() => {
     if (isGameActive) {
       if (!isUserTurn && !isComputerTurn && !isRoundActive) {
-        setIsComputerTurn(true);
+        setTimeout(() => setIsComputerTurn(true), 1000);
       }
     }
   }, [isGameActive, isComputerTurn, isRoundActive, isUserTurn]);
@@ -121,16 +137,27 @@ const HomeScreen: React.FC = () => {
     }
   }, [isRoundActive]);
 
+
   return (
     <View style={styles.rootContainer}>
       <View style={styles.upperContainer}>
-        <Text>Simon says</Text>
+        <Text
+          style={[
+            styles.titleText,
+            isComputerTurn && styles.titleText_typeRed,
+            ,
+            !isComputerTurn && styles.titleText_typeGreen,
+          ]}
+        >
+          {message}
+        </Text>
+        <Text>{`Your score: ${score}`}</Text>
       </View>
       <View style={styles.buttonsContainer}>
         <View style={styles.upperButtonsContainer}>
           <ColorButton
             colorEnum={colorEnum.blue}
-            isDisabled={isRoundActive}
+            isComputerTurn={!isUserTurn}
             sound={blueButtonSound}
             color={"blue"}
             isFlash={flashBlue}
@@ -141,14 +168,14 @@ const HomeScreen: React.FC = () => {
             sound={redButtonSound}
             color={"red"}
             isFlash={flashRed}
-            isDisabled={isRoundActive}
+            isComputerTurn={!isUserTurn}
             checkUserSequance={checkUserSequance}
           />
         </View>
         <View style={styles.lowerButtonsContainer}>
           <ColorButton
             colorEnum={colorEnum.yellow}
-            isDisabled={isRoundActive}
+            isComputerTurn={!isUserTurn}
             sound={yellowButtonSound}
             color={"yellow"}
             isFlash={flashYellow}
@@ -156,7 +183,7 @@ const HomeScreen: React.FC = () => {
           />
           <ColorButton
             colorEnum={colorEnum.green}
-            isDisabled={isRoundActive}
+            isComputerTurn={!isUserTurn}
             sound={greenButtonSound}
             color={"green"}
             isFlash={flashGreen}
@@ -165,69 +192,39 @@ const HomeScreen: React.FC = () => {
         </View>
       </View>
       <View style={styles.bottomContainer}>
-        <TouchableOpacity
-          disabled={isGameActive}
-          style={styles.startButton}
-          onPress={startGame}
+        {!isGameActive && (
+          <TouchableOpacity
+            disabled={isGameActive}
+            style={styles.button}
+            onPress={() => setTimeout(playGame, 550)}
+          >
+            <Text style={styles.button_text}>Play</Text>
+          </TouchableOpacity>
+        )}
+        {isGameActive && (
+          <TouchableOpacity
+            style={[styles.button, styles.button_Stop]}
+            onPress={() => {
+              setMessage("");
+              dispatch(resetCurrentScore())
+              resetAllStates();
+            }}
+          >
+            <Text style={styles.button_text}>Reset Game</Text>
+          </TouchableOpacity>
+        )}
+       {!isGameActive && <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate("LeaderBoard")}
         >
-          <Text style={styles.startButton_text}>Start</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.startButton} onPress={resetAllStates}>
-          <Text style={styles.startButton_text}>Reset</Text>
-        </TouchableOpacity>
+          <Text style={styles.button_text}>Leader board</Text>
+        </TouchableOpacity>}
       </View>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  rootContainer: {
-    flex: 1,
-  },
-  upperContainer: {
-    flex: 0.2,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  buttonsContainer: {
-    flex: 0.4,
-    flexDirection: "row",
-  },
-  upperButtonsContainer: {
-    flex: 0.5,
-    flexDirection: "column",
-  },
-  lowerButtonsContainer: {
-    flex: 0.5,
-    flexDirection: "column",
-  },
-  bottomContainer: {
-    flex: 0.2,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  startButton: {
-    backgroundColor: "black",
-    width: width / 2,
-    height: height / 14,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  startButton_text: {
-    color: "white",
-    fontSize: 20,
-    fontWeight: "400",
-  },
-  testButton: {
-    backgroundColor: "green",
-    width: width / 2,
-    height: height / 14,
-  },
-});
-export default HomeScreen;
 
-// let touchable = useRef<Button>(null);
-// const blueButtonReff = useRef<Button>(null);
-// const redButtonReff = useRef<Button>(null);
-// const yellowButtonReff = useRef<Button>(null);
-// const greenButtonReff = useRef<Button>(null);
+export default GameScreen;
+
+

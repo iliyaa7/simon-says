@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "build:android":"npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res && cd android && ./gradlew assembleDebug && cd ../",
+    "build:android": "npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res && cd android && ./gradlew assembleDebug && cd ../",
+    "apk":"cd android && ./gradlew clean && ./gradlew assembleRelease && cd ..",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
@@ -11,8 +12,10 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "^1.17.6",
     "@react-native-community/masked-view": "^0.1.11",
     "@react-navigation/native": "^5.x",
+    "@react-navigation/native-stack": "^6.6.2",
     "@react-navigation/stack": "^5.x",
     "@reduxjs/toolkit": "^1.8.2",
     "react": "17.0.2",

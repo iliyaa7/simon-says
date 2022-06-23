@@ -1,15 +1,14 @@
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import React, { useEffect, useState } from "react";
 import Sound from "react-native-sound";
-import { useAppSelector, useAppDispatch } from "../../redux/hooks/hooks";
-import { updateValue } from "../../redux/features/userCurrentStep/userCurrentStepSlice";
 import { failButtonSound } from "../../utils/react-native-sound";
+import { useAppSelector } from "../../redux/hooks/hooks";
 
 interface ButtonProps {
   color: string;
   sound: Sound;
   isFlash: boolean;
-  isDisabled: boolean;
+  isComputerTurn: boolean;
   colorEnum: number;
   checkUserSequance: (currentStep: number) => boolean;
 }
@@ -18,19 +17,15 @@ const ColorButton: React.FC<ButtonProps> = ({
   color,
   sound,
   isFlash,
-  isDisabled,
+  isComputerTurn,
   colorEnum,
   checkUserSequance,
 }) => {
-  const currentStep = useAppSelector((state) => state.userCurrentStep.value);
-  const sequanceArray = useAppSelector((state) => state.sequanceArray.value);
-  const dispatch = useAppDispatch();
-  const [sequanceCount, setSequanceCount] = useState<number>(0);
+  const isGameActive = useAppSelector((state) => state.isGameActive.value);
 
   useEffect(() => {
     sound.setVolume(1);
     failButtonSound.setVolume(1);
-
 
     return () => {
       failButtonSound.release();
@@ -47,12 +42,12 @@ const ColorButton: React.FC<ButtonProps> = ({
   return (
     <View style={[styles.container, isFlash && styles.flash]}>
       <TouchableOpacity
-        disabled={isDisabled}
+        disabled={isComputerTurn || !isGameActive }
         onPress={() => {
           const userSucceeded = checkUserSequance(colorEnum);
           if (!userSucceeded) {
             failButtonSound.play();
-            return
+            return;
           }
           sound.play();
         }}
@@ -75,20 +70,3 @@ const styles = StyleSheet.create({
 });
 
 export default ColorButton;
-
-// const ColorButton = React.forwardRef<Button, ButtonProps>(({sound, color}, ref) => {
-//   useEffect(() => {
-//     sound.setVolume(1);
-
-//     return () => {
-//       sound.release();
-//     };
-//   }, []);
-//   return   <>
-//   <Button
-//   title="a"
-//     onPress={() => sound.play()}
-//     ref={ref}
-//   ></Button>
-// </>;
-// });
