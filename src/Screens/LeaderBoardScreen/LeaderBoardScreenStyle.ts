@@ -1,32 +1,17 @@
-import { StyleSheet } from "react-native";
-import { Dimensions } from "react-native";
+import { StyleSheet, Dimensions } from 'react-native';
 const { width, height } = Dimensions.get("screen");
-
 
 const styles = StyleSheet.create({
     rootContainer: {
       flex: 1,
-      padding: 20
     },
     upperContainer: {
-      flex: 0.1,
+      flex: 0.8,
       justifyContent: "center",
       alignItems: "center",
     },
-    buttonsContainer: {
-      flex: 0.4,
-      flexDirection: "row",
-    },
-    upperButtonsContainer: {
-      flex: 0.5,
-      flexDirection: "column",
-    },
-    lowerButtonsContainer: {
-      flex: 0.5,
-      flexDirection: "column",
-    },
     bottomContainer: {
-      flex: 0.3,
+      flex: 0.2,
       justifyContent: "center",
       alignItems: "center",
     },
@@ -38,26 +23,26 @@ const styles = StyleSheet.create({
       alignItems: "center",
       marginBottom: 20,
     },
-    button_Stop: {
-      backgroundColor: "red",
-    },
     button_text: {
       color: "white",
       fontSize: 20,
       fontWeight: "400",
     },
     titleText: {
+      color: "#808080",
+      marginBottom: 20,
       fontSize: 27,
       fontWeight: "500",
     },
-    titleText_typeRed: {
-      color: "red",
-    },
-    titleText_typeGreen: {
-      color: "green",
-    },
     scoreText: {
-        color: "grey"
+      color: "#808080",
+      fontSize: 20,
+      fontWeight: "500",
+    },
+    messageText: {
+      color: "#808080",
+      fontSize: 15,
+      fontWeight: "300",
     },
   });
   export default styles

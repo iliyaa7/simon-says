@@ -36,7 +36,7 @@ const SplashScreen: React.FC<SplashScreenScreenProp> = ({ navigation }) => {
 
   return (
     <View style={styles.rootContainer}>
-      <Text>Simon Says</Text>
+      <Text style={styles.text} >Simon Says</Text>
     </View>
   );
 };

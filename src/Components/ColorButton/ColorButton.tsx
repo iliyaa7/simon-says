@@ -1,8 +1,9 @@
-import { StyleSheet, TouchableOpacity, View } from "react-native";
-import React, { useEffect, useState } from "react";
+import { TouchableOpacity, View } from "react-native";
+import React, { useEffect } from "react";
 import Sound from "react-native-sound";
 import { failButtonSound } from "../../utils/react-native-sound";
 import { useAppSelector } from "../../redux/hooks/hooks";
+import styles from "./ColorButtonStyle";
 
 interface ButtonProps {
   color: string;
@@ -23,6 +24,15 @@ const ColorButton: React.FC<ButtonProps> = ({
 }) => {
   const isGameActive = useAppSelector((state) => state.isGameActive.value);
 
+  const handleUserPress = (): void => {
+    const userSucceeded = checkUserSequance(colorEnum);
+    if (!userSucceeded) {
+      failButtonSound.play();
+      return;
+    }
+    sound.play();
+  };
+
   useEffect(() => {
     sound.setVolume(1);
     failButtonSound.setVolume(1);
@@ -33,6 +43,7 @@ const ColorButton: React.FC<ButtonProps> = ({
       sound.release();
     };
   }, []);
+
   useEffect(() => {
     if (isFlash) {
       sound.play();
@@ -42,31 +53,12 @@ const ColorButton: React.FC<ButtonProps> = ({
   return (
     <View style={[styles.container, isFlash && styles.flash]}>
       <TouchableOpacity
-        disabled={isComputerTurn || !isGameActive }
-        onPress={() => {
-          const userSucceeded = checkUserSequance(colorEnum);
-          if (!userSucceeded) {
-            failButtonSound.play();
-            return;
-          }
-          sound.play();
-        }}
+        disabled={isComputerTurn || !isGameActive}
+        onPress={handleUserPress}
         style={[styles.button, { backgroundColor: color }]}
       ></TouchableOpacity>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  button: {
-    flex: 1,
-  },
-  flash: {
-    opacity: 0.4,
-  },
-});
 
 export default ColorButton;
